@@ -12,3 +12,178 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+
+
+model Usuario {
+  id_usuario    Int      @id @default(autoincrement())
+  nombre_usuario String   @db.VarChar(255)
+  email          String   @unique @db.VarChar(255)
+  contrasena     String   @db.VarChar(255)
+  fecha_registro DateTime @db.Date @default(now())
+  genero         String?  @db.VarChar(50)
+  edad           Int?
+  ubicacion      String?  @db.VarChar(255)
+  tipo_usuario   String?  @db.VarChar(50)
+
+  // Relaciones
+  equipos_capitan Equipo[]
+  apuestas        Apuesta[]
+  equipo_jugadores Equipo_Jugadores[]
+}
+
+model Deporte {
+  id_deporte    Int      @id @default(autoincrement())
+  nombre_deporte String   @db.VarChar(255)
+  tipo_deporte   String   @db.VarChar(50)
+
+  // Relaciones
+  equipos  Equipo[]
+  matches  Match[]
+  resultados Resultado[]
+}
+
+model Equipo {
+  id_equipo      Int               @id @default(autoincrement())
+  nombre_equipo  String            @db.VarChar(255)
+  id_deporte     Int
+  id_capitan     Int
+  categoria_edad String?           @db.VarChar(50)
+  categoria_genero String?         @db.VarChar(50)
+  fecha_creacion DateTime @db.Date          @default(now())
+
+  // Relaciones
+  capitan      Usuario @relation(fields: [id_capitan], references: [id_usuario])
+  deporte      Deporte @relation(fields: [id_deporte], references: [id_deporte])
+  jugadores    Equipo_Jugadores[]
+  matches1     Match[] @relation("Equipo1")
+  matches2     Match[] @relation("Equipo2")
+  apuestas     Apuesta[]
+  plataformas  Equipos_Plataformas[]
+  resultados1  Resultado[] @relation("Equipo1")
+  resultados2  Resultado[] @relation("Equipo2")
+}
+
+model Equipo_Jugadores {
+  id_equipo Int
+  id_usuario Int
+  fecha_union DateTime @db.Date @default(now())
+  rol        String?   @db.VarChar(50)
+
+  // Relaciones
+  equipo  Equipo  @relation(fields: [id_equipo], references: [id_equipo])
+  usuario Usuario @relation(fields: [id_usuario], references: [id_usuario])
+
+  @@id([id_equipo, id_usuario])
+}
+
+model Match {
+  id_match       Int      @id @default(autoincrement())
+  id_equipo_1    Int
+  id_equipo_2    Int
+  id_deporte     Int
+  fecha_match    DateTime? @db.Date 
+  ubicacion      String?  @db.VarChar(255)
+  monto_apuesta  Float?
+  resultado_equipo_1 Int?
+  resultado_equipo_2 Int?
+  estado_match   String?  @db.VarChar(50)
+
+  // Relaciones
+  equipo1 Equipo @relation("Equipo1", fields: [id_equipo_1], references: [id_equipo])
+  equipo2 Equipo @relation("Equipo2", fields: [id_equipo_2], references: [id_equipo])
+  deporte Deporte @relation(fields: [id_deporte], references: [id_deporte])
+  apuestas Apuesta[]
+}
+
+model Apuesta {
+  id_apuesta     Int      @id @default(autoincrement())
+  id_match       Int
+  id_usuario     Int
+  monto_apostado Float
+  equipo_apostado Int
+  fecha_apuesta  DateTime @db.Date @default(now())
+  estado_apuesta String?  @db.VarChar(50)
+
+  // Relaciones
+  match  Match   @relation(fields: [id_match], references: [id_match])
+  usuario Usuario @relation(fields: [id_usuario], references: [id_usuario])
+  equipo  Equipo  @relation(fields: [equipo_apostado], references: [id_equipo])
+}
+
+model Resultado {
+  id_resultado     Int      @id @default(autoincrement())
+  id_deporte       Int
+  id_equipo_1      Int
+  id_equipo_2      Int
+  resultado_equipo_1 Int?
+  resultado_equipo_2 Int?
+  fecha_resultado DateTime?@db.Date 
+
+  // Relaciones
+  equipo1 Equipo @relation("Equipo1", fields: [id_equipo_1], references: [id_equipo])
+  equipo2 Equipo @relation("Equipo2", fields: [id_equipo_2], references: [id_equipo])
+  deporte Deporte @relation(fields: [id_deporte], references: [id_deporte])
+}
+
+model Plataforma_Apuestas {
+  id_plataforma  Int      @id @default(autoincrement())
+  nombre_plataforma String @db.VarChar(255)
+  url_plataforma   String? @db.VarChar(255)
+  contacto         String? @db.VarChar(255)
+
+  // Relaciones
+  equipos Equipos_Plataformas[]
+}
+
+model Equipos_Plataformas {
+  id_equipo     Int
+  id_plataforma Int
+  fecha_vinculacion DateTime @db.Date @default(now())
+
+  // Relaciones
+  equipo     Equipo           @relation(fields: [id_equipo], references: [id_equipo])
+  plataforma Plataforma_Apuestas @relation(fields: [id_plataforma], references: [id_plataforma])
+
+  @@id([id_equipo, id_plataforma])
+}
+
+
+enum Rol {
+  ADMIN
+  USER
+}
+
+enum EstadoMatch {
+  PENDING
+  IN_PROGRESS
+  FINISHED
+}
+
+enum EstadoApuesta {
+  PENDING
+  WIN
+  LOSS
+  CANCELED
+}
+
+enum TipoDeporte {
+  SOCCER
+  BASKETBALL
+  TENNIS
+  BASEBALL
+  VOLLEYBALL
+}
+
+enum CategoriaEdad {
+  UNDER_18
+  UNDER_21
+  ADULT
+  SENIOR
+}
+
+enum CategoriaGenero {
+  MALE
+  FEMALE
+  OTHER
+}
