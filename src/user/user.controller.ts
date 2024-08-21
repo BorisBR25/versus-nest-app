@@ -8,8 +8,14 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Post()
-  create(@Body() createUserDto: CreateUserDto) {
-    return this.userService.create(createUserDto);
+  async create(@Body() user: CreateUserDto) {
+
+    console.log(user);
+    if (!user) {
+      throw new Error('No se ha enviado un usuario');
+    }
+    const result = await this.userService.create(user);
+    return `Usuario ${result.nombre_usuario} creado con éxito`;
   }
 
   @Get()
